@@ -1,7 +1,9 @@
 use logos::Logos;
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-#[derive(Logos, Debug, PartialEq)]
-pub(super) enum SyntaxKind {
+#[derive(Logos, Debug, PartialEq, IntoPrimitive, TryFromPrimitive)]
+#[repr(u16)]
+pub(crate) enum SyntaxKind {
     #[regex(" +")]
     Whitespace,
 
@@ -13,6 +15,12 @@ pub(super) enum SyntaxKind {
 
     #[error]
     Error,
+}
+
+impl From<SyntaxKind> for rowan::SyntaxKind {
+    fn from(kind: SyntaxKind) -> Self {
+        Self(kind.into())
+    }
 }
 
 #[cfg(test)]
