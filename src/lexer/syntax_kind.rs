@@ -1,7 +1,7 @@
 use logos::Logos;
 
 #[derive(Logos, Debug, PartialEq)]
-enum SyntaxKind {
+pub(super) enum SyntaxKind {
     #[regex(" +")]
     Whitespace,
 
