@@ -42,7 +42,7 @@ mod tests {
             Some((SyntaxKind::Whitespace, SmolStr::from(" ")))
         );
 
-        assert_eq!(lexer.next(), Some((SyntaxKind::Add, SmolStr::from("+"))));
+        assert_eq!(lexer.next(), Some((SyntaxKind::Plus, SmolStr::from("+"))));
 
         assert_eq!(
             lexer.next(),

@@ -12,16 +12,16 @@ pub(crate) enum SyntaxKind {
     Number,
 
     #[token("+")]
-    Add,
+    Plus,
 
     #[token("-")]
-    Sub,
+    Minus,
 
     #[token("*")]
-    Mul,
+    Star,
 
     #[token("/")]
-    Div,
+    Slash,
 
     #[error]
     Error,
@@ -41,10 +41,10 @@ impl fmt::Display for SyntaxKind {
         f.write_str(match self {
             Self::Whitespace => "whitespace",
             Self::Number => "a number literal",
-            Self::Add => "a plus sign",
-            Self::Sub => "a minus sign",
-            Self::Mul => "an asterisk",
-            Self::Div => "a slash",
+            Self::Plus => "a plus sign",
+            Self::Minus => "a minus sign",
+            Self::Star => "an asterisk",
+            Self::Slash => "a slash",
             Self::Error => "an erroneous character",
             _ => unreachable!(),
         })
@@ -83,22 +83,22 @@ mod tests {
     }
 
     #[test]
-    fn lexes_addition() {
-        test("+", SyntaxKind::Add);
+    fn lexes_plus() {
+        test("+", SyntaxKind::Plus);
     }
 
     #[test]
-    fn lexes_subtraction() {
-        test("-", SyntaxKind::Sub);
+    fn lexes_minus() {
+        test("-", SyntaxKind::Minus);
     }
 
     #[test]
-    fn lexes_multiplication() {
-        test("*", SyntaxKind::Mul);
+    fn lexes_star() {
+        test("*", SyntaxKind::Star);
     }
 
     #[test]
-    fn lexes_division() {
-        test("/", SyntaxKind::Div);
+    fn lexes_slash() {
+        test("/", SyntaxKind::Slash);
     }
 }

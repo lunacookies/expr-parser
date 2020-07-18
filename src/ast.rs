@@ -59,10 +59,10 @@ ast_node!(Operation, SyntaxKind::Operation);
 ast_token!(Number, SyntaxKind::Number);
 ast_token!(
     Operator,
-    SyntaxKind::Add,
-    SyntaxKind::Mul,
-    SyntaxKind::Div,
-    SyntaxKind::Sub
+    SyntaxKind::Plus,
+    SyntaxKind::Star,
+    SyntaxKind::Slash,
+    SyntaxKind::Minus
 );
 
 impl Number {

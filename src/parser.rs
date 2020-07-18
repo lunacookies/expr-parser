@@ -104,16 +104,16 @@ impl<'a> Parser<'a> {
         loop {
             let op = loop {
                 match self.peek() {
-                    Some(SyntaxKind::Add) => {
+                    Some(SyntaxKind::Plus) => {
                         break Op::Add;
                     }
-                    Some(SyntaxKind::Mul) => {
+                    Some(SyntaxKind::Star) => {
                         break Op::Mul;
                     }
-                    Some(SyntaxKind::Div) => {
+                    Some(SyntaxKind::Slash) => {
                         break Op::Div;
                     }
-                    Some(SyntaxKind::Sub) => {
+                    Some(SyntaxKind::Minus) => {
                         break Op::Sub;
                     }
                     Some(kind) => {
@@ -181,7 +181,7 @@ mod tests {
             r#"Root@0..3
   Operation@0..3
     Number@0..1 "1"
-    Add@1..2 "+"
+    Plus@1..2 "+"
     Number@2..3 "1"
 "#,
         );
@@ -196,10 +196,10 @@ mod tests {
             r#"Root@0..5
   Operation@0..5
     Number@0..1 "1"
-    Add@1..2 "+"
+    Plus@1..2 "+"
     Operation@2..5
       Number@2..3 "2"
-      Mul@3..4 "*"
+      Star@3..4 "*"
       Number@4..5 "3"
 "#,
         );
@@ -215,9 +215,9 @@ mod tests {
   Operation@0..6
     Operation@0..4
       Number@0..2 "10"
-      Sub@2..3 "-"
+      Minus@2..3 "-"
       Number@3..4 "7"
-    Sub@4..5 "-"
+    Minus@4..5 "-"
     Number@5..6 "3"
 "#,
         );
@@ -235,19 +235,19 @@ mod tests {
     Operation@1..7
       Number@1..3 "14"
       Whitespace@3..4 " "
-      Add@4..5 "+"
+      Plus@4..5 "+"
       Number@5..7 "26"
-    Sub@7..8 "-"
+    Minus@7..8 "-"
     Whitespace@8..9 " "
     Operation@9..21
       Operation@9..17
         Number@9..11 "27"
         Whitespace@11..12 " "
-        Div@12..13 "/"
+        Slash@12..13 "/"
         Whitespace@13..15 "  "
         Number@15..16 "3"
         Whitespace@16..17 " "
-      Mul@17..18 "*"
+      Star@17..18 "*"
       Whitespace@18..19 " "
       Number@19..20 "2"
       Whitespace@20..21 " "
@@ -281,7 +281,7 @@ mod tests {
     Number@0..1 "1"
     Whitespace@1..2 " "
     Error@2..3 "a"
-    Add@3..4 "+"
+    Plus@3..4 "+"
     Whitespace@4..5 " "
     Number@5..6 "2"
 "#,
