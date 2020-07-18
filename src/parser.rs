@@ -3,7 +3,7 @@ use crate::{Op, SyntaxNode};
 use rowan::{GreenNode, GreenNodeBuilder};
 use std::iter::Peekable;
 
-struct Parse {
+pub struct Parse {
     green_node: GreenNode,
     errors: Vec<String>,
 }
@@ -13,19 +13,19 @@ impl Parse {
         SyntaxNode::new_root(self.green_node.clone())
     }
 
-    fn format(&self) -> String {
+    pub fn format(&self) -> String {
         format!("{:#?}", self.syntax())
     }
 }
 
-struct Parser<'a> {
+pub struct Parser<'a> {
     lexer: Peekable<Lexer<'a>>,
     builder: GreenNodeBuilder<'static>,
     errors: Vec<String>,
 }
 
 impl<'a> Parser<'a> {
-    fn new(s: &'a str) -> Self {
+    pub fn new(s: &'a str) -> Self {
         Self {
             lexer: Lexer::new(s).peekable(),
             builder: GreenNodeBuilder::new(),
@@ -53,7 +53,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse(mut self) -> Parse {
+    pub fn parse(mut self) -> Parse {
         self.builder.start_node(SyntaxKind::Root.into());
 
         self.skip_ws();
