@@ -13,11 +13,8 @@ impl Parse {
         SyntaxNode::new_root(self.green_node.clone())
     }
 
-    fn format(&self) -> Vec<String> {
-        self.syntax()
-            .descendants_with_tokens()
-            .map(|child| format!("{:?}@{:?}", child.kind(), child.text_range()))
-            .collect()
+    fn format(&self) -> String {
+        format!("{:#?}", self.syntax())
     }
 }
 
@@ -119,41 +116,45 @@ mod tests {
     #[test]
     fn parse_single_number() {
         let parse = Parser::new("1").parse();
-        assert_eq!(parse.format(), vec!["Root@0..1", "Number@0..1"]);
-    }
-
-    #[test]
-    fn parse_with_no_nesting() {
-        let parse = Parser::new("1+1").parse();
 
         assert_eq!(
             parse.format(),
-            vec![
-                "Root@0..3",
-                "Operation@0..3",
-                "Number@0..1",
-                "Add@1..2",
-                "Number@2..3",
-            ],
+            r#"Root@0..1
+  Number@0..1 "1"
+"#,
         );
     }
 
     #[test]
-    fn parse_with_one_level_nesting() {
+    fn parse_simple_binary_operation() {
+        let parse = Parser::new("1+1").parse();
+
+        assert_eq!(
+            parse.format(),
+            r#"Root@0..3
+  Operation@0..3
+    Number@0..1 "1"
+    Add@1..2 "+"
+    Number@2..3 "1"
+"#,
+        );
+    }
+
+    #[test]
+    fn multiplication_has_higher_precedence_than_addition() {
         let parse = Parser::new("1+2*3").parse();
 
         assert_eq!(
             parse.format(),
-            vec![
-                "Root@0..5",
-                "Operation@0..5",
-                "Number@0..1",
-                "Add@1..2",
-                "Operation@2..5",
-                "Number@2..3",
-                "Mul@3..4",
-                "Number@4..5"
-            ],
+            r#"Root@0..5
+  Operation@0..5
+    Number@0..1 "1"
+    Add@1..2 "+"
+    Operation@2..5
+      Number@2..3 "2"
+      Mul@3..4 "*"
+      Number@4..5 "3"
+"#,
         );
     }
 }
