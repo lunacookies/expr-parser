@@ -121,7 +121,7 @@ impl<'a> Parser<'a> {
                         self.errors
                             .push(format!("found {}, expected an operator", kind));
                     }
-                    None => self.errors.push("expected an operatoe".to_string()),
+                    None => return,
                 }
             };
 
