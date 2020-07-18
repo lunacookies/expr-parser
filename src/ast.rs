@@ -109,53 +109,31 @@ impl Operation {
 }
 
 #[derive(Debug)]
-struct Expr(SyntaxElement);
-
-#[derive(Debug)]
-enum ExprKind {
+enum Expr {
     Number(Number),
     Operation(Operation),
 }
 
 impl Expr {
     fn cast(element: SyntaxElement) -> Option<Self> {
-        if element
+        element
             .clone()
             .into_token()
             .and_then(Number::cast)
-            .is_some()
-            || element
-                .clone()
-                .into_node()
-                .and_then(Operation::cast)
-                .is_some()
-        {
-            Some(Self(element))
-        } else {
-            None
-        }
-    }
-
-    fn kind(&self) -> ExprKind {
-        self.0
-            .clone()
-            .into_token()
-            .and_then(Number::cast)
-            .map(ExprKind::Number)
+            .map(Self::Number)
             .or_else(|| {
-                self.0
+                element
                     .clone()
                     .into_node()
                     .and_then(Operation::cast)
-                    .map(ExprKind::Operation)
+                    .map(Self::Operation)
             })
-            .unwrap()
     }
 
     fn eval(&self) -> Option<u32> {
-        match self.kind() {
-            ExprKind::Number(n) => Some(n.eval()),
-            ExprKind::Operation(o) => o.eval(),
+        match self {
+            Self::Number(n) => Some(n.eval()),
+            Self::Operation(o) => o.eval(),
         }
     }
 }
