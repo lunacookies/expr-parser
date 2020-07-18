@@ -26,6 +26,7 @@ pub(crate) enum SyntaxKind {
     Error,
 
     Root,
+    Operation,
 }
 
 impl From<SyntaxKind> for rowan::SyntaxKind {
