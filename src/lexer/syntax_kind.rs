@@ -10,8 +10,17 @@ pub(crate) enum SyntaxKind {
     #[regex("[1234567890]+")]
     Number,
 
-    #[regex("[*/+-]")]
-    Op,
+    #[token("+")]
+    Add,
+
+    #[token("-")]
+    Sub,
+
+    #[token("*")]
+    Mul,
+
+    #[token("/")]
+    Div,
 
     #[error]
     Error,
@@ -51,16 +60,34 @@ mod tests {
     }
 
     #[test]
-    fn lexes_operations() {
-        let mut lexer = SyntaxKind::lexer("+-*/");
+    fn lexes_addition() {
+        let mut lexer = SyntaxKind::lexer("+");
 
-        assert_eq!(lexer.next(), Some(SyntaxKind::Op));
+        assert_eq!(lexer.next(), Some(SyntaxKind::Add));
         assert_eq!(lexer.slice(), "+");
-        assert_eq!(lexer.next(), Some(SyntaxKind::Op));
+    }
+
+    #[test]
+    fn lexes_subtraction() {
+        let mut lexer = SyntaxKind::lexer("-");
+
+        assert_eq!(lexer.next(), Some(SyntaxKind::Sub));
         assert_eq!(lexer.slice(), "-");
-        assert_eq!(lexer.next(), Some(SyntaxKind::Op));
+    }
+
+    #[test]
+    fn lexes_multiplication() {
+        let mut lexer = SyntaxKind::lexer("*");
+
+        assert_eq!(lexer.next(), Some(SyntaxKind::Mul));
         assert_eq!(lexer.slice(), "*");
-        assert_eq!(lexer.next(), Some(SyntaxKind::Op));
+    }
+
+    #[test]
+    fn lexes_division() {
+        let mut lexer = SyntaxKind::lexer("/");
+
+        assert_eq!(lexer.next(), Some(SyntaxKind::Div));
         assert_eq!(lexer.slice(), "/");
     }
 }
