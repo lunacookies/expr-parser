@@ -15,7 +15,7 @@ impl Parse {
 
     fn format(&self) -> Vec<String> {
         self.syntax()
-            .children_with_tokens()
+            .descendants_with_tokens()
             .map(|child| format!("{:?}@{:?}", child.kind(), child.text_range()))
             .collect()
     }
@@ -55,9 +55,22 @@ impl<'a> Parser<'a> {
     fn parse(mut self) -> Parse {
         self.builder.start_node(SyntaxKind::Root.into());
 
+        self.expr_bp(0);
+
+        self.builder.finish_node();
+
+        Parse {
+            green_node: self.builder.finish(),
+            errors: self.errors,
+        }
+    }
+
+    fn expr_bp(&mut self, min_bp: u8) {
+        let checkpoint = self.builder.checkpoint();
+
         match self.peek() {
             Some(SyntaxKind::Number) => self.bump(),
-            _ => panic!("bad token"),
+            tok => panic!("bad token: {:?}", tok),
         }
 
         loop {
@@ -67,18 +80,31 @@ impl<'a> Parser<'a> {
                 Some(SyntaxKind::Mul) => Op::Mul,
                 Some(SyntaxKind::Div) => Op::Div,
                 Some(SyntaxKind::Sub) => Op::Sub,
-                _ => panic!("bad token"),
+                op => panic!("bad operator: {:?}", op),
             };
 
-            todo!()
-        }
+            self.builder
+                .start_node_at(checkpoint, SyntaxKind::Operation.into());
 
-        self.builder.finish_node();
+            self.bump();
 
-        Parse {
-            green_node: self.builder.finish(),
-            errors: self.errors,
+            let (left_bp, right_bp) = infix_bp(op);
+
+            if left_bp < min_bp {
+                break;
+            }
+
+            self.expr_bp(right_bp);
+
+            self.builder.finish_node();
         }
+    }
+}
+
+fn infix_bp(op: Op) -> (u8, u8) {
+    match op {
+        Op::Add | Op::Sub => (1, 2),
+        Op::Mul | Op::Div => (3, 4),
     }
 }
 
@@ -89,6 +115,41 @@ mod tests {
     #[test]
     fn parse_single_number() {
         let parse = Parser::new("1").parse();
-        assert_eq!(parse.format(), vec!["Number@0..1"]);
+        assert_eq!(parse.format(), vec!["Root@0..1", "Number@0..1"]);
+    }
+
+    #[test]
+    fn parse_with_no_nesting() {
+        let parse = Parser::new("1+1").parse();
+
+        assert_eq!(
+            parse.format(),
+            vec![
+                "Root@0..3",
+                "Operation@0..3",
+                "Number@0..1",
+                "Add@1..2",
+                "Number@2..3",
+            ],
+        );
+    }
+
+    #[test]
+    fn parse_with_one_level_nesting() {
+        let parse = Parser::new("1+2*3").parse();
+
+        assert_eq!(
+            parse.format(),
+            vec![
+                "Root@0..5",
+                "Operation@0..5",
+                "Number@0..1",
+                "Add@1..2",
+                "Operation@2..5",
+                "Number@2..3",
+                "Mul@3..4",
+                "Number@4..5"
+            ],
+        );
     }
 }
