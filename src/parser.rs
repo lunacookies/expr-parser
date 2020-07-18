@@ -157,4 +157,22 @@ mod tests {
 "#,
         );
     }
+
+    #[test]
+    fn subtraction_is_left_associative() {
+        let parse = Parser::new("10-7-3").parse();
+
+        assert_eq!(
+            parse.format(),
+            r#"Root@0..6
+  Operation@0..6
+    Operation@0..4
+      Number@0..2 "10"
+      Sub@2..3 "-"
+      Number@3..4 "7"
+    Sub@4..5 "-"
+    Number@5..6 "3"
+"#,
+        );
+    }
 }
