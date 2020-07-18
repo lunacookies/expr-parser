@@ -1,10 +1,24 @@
 use crate::lexer::{Lexer, SyntaxKind};
+use crate::SyntaxNode;
 use rowan::{GreenNode, GreenNodeBuilder};
 use std::iter::Peekable;
 
 struct Parse {
     green_node: GreenNode,
     errors: Vec<String>,
+}
+
+impl Parse {
+    fn syntax(&self) -> SyntaxNode {
+        SyntaxNode::new_root(self.green_node.clone())
+    }
+
+    fn format(&self) -> Vec<String> {
+        self.syntax()
+            .children_with_tokens()
+            .map(|child| format!("{:?}@{:?}", child.kind(), child.text_range()))
+            .collect()
+    }
 }
 
 enum Op {
@@ -65,5 +79,16 @@ impl<'a> Parser<'a> {
             green_node: self.builder.finish(),
             errors: self.errors,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_single_number() {
+        let parse = Parser::new("1").parse();
+        assert_eq!(parse.format(), vec!["Number@0..1"]);
     }
 }
