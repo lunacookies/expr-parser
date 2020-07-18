@@ -5,7 +5,7 @@ use std::fmt;
 #[derive(Logos, Debug, Copy, Clone, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u16)]
 pub(crate) enum SyntaxKind {
-    #[regex(" +")]
+    #[regex("[ \n]+")]
     Whitespace,
 
     #[regex("[1234567890]+")]
@@ -70,6 +70,11 @@ mod tests {
     #[test]
     fn lexes_spaces() {
         test("    ", SyntaxKind::Whitespace);
+    }
+
+    #[test]
+    fn lexes_newlines() {
+        test("\n\n", SyntaxKind::Whitespace);
     }
 
     #[test]
