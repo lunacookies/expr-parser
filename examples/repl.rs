@@ -21,6 +21,18 @@ fn main() -> io::Result<()> {
             writeln!(stderr, "Failed to evaluate.")?;
         }
 
+        let parse_errors = parse.errors();
+        match parse_errors.len() {
+            0 => {}
+            num_errors => {
+                writeln!(stderr, "{} errors were found:", num_errors)?;
+
+                for error in parse_errors {
+                    writeln!(stderr, "  {}", error)?;
+                }
+            }
+        }
+
         writeln!(stderr, "{}", parse.format())?;
 
         input.clear();
