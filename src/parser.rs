@@ -87,8 +87,12 @@ impl<'a> Parser<'a> {
                     self.bump();
                     break;
                 }
-                Some(_) => self.eat(SyntaxKind::Error),
-                None => return,
+                Some(kind) => {
+                    self.eat(SyntaxKind::Error);
+                    self.errors
+                        .push(format!("found {}, expected {}", kind, SyntaxKind::Number));
+                }
+                None => self.errors.push(format!("expected {}", SyntaxKind::Number)),
             }
         }
 
@@ -109,8 +113,12 @@ impl<'a> Parser<'a> {
                     Some(SyntaxKind::Sub) => {
                         break Op::Sub;
                     }
-                    Some(_) => self.eat(SyntaxKind::Error),
-                    None => return,
+                    Some(kind) => {
+                        self.eat(SyntaxKind::Error);
+                        self.errors
+                            .push(format!("found {}, expected an operator", kind));
+                    }
+                    None => self.errors.push("expected an operatoe".to_string()),
                 }
             };
 

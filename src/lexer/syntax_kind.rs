@@ -1,5 +1,6 @@
 use logos::Logos;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
+use std::fmt;
 
 #[derive(Logos, Debug, Copy, Clone, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u16)]
@@ -32,6 +33,21 @@ pub(crate) enum SyntaxKind {
 impl From<SyntaxKind> for rowan::SyntaxKind {
     fn from(kind: SyntaxKind) -> Self {
         Self(kind.into())
+    }
+}
+
+impl fmt::Display for SyntaxKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::Whitespace => "whitespace",
+            Self::Number => "a number literal",
+            Self::Add => "a plus sign",
+            Self::Sub => "a minus sign",
+            Self::Mul => "an asterisk",
+            Self::Div => "a slash",
+            Self::Error => "an erroneous character",
+            _ => unreachable!(),
+        })
     }
 }
 
