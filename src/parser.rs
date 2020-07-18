@@ -1,5 +1,5 @@
 use crate::lexer::{Lexer, SyntaxKind};
-use crate::SyntaxNode;
+use crate::{Op, SyntaxNode};
 use rowan::{GreenNode, GreenNodeBuilder};
 use std::iter::Peekable;
 
@@ -16,13 +16,6 @@ impl Parse {
     fn format(&self) -> String {
         format!("{:#?}", self.syntax())
     }
-}
-
-enum Op {
-    Add,
-    Mul,
-    Div,
-    Sub,
 }
 
 struct Parser<'a> {
