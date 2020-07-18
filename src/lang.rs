@@ -4,7 +4,7 @@ use std::convert::TryFrom;
 pub(crate) enum Lang {}
 
 impl rowan::Language for Lang {
-    type Kind = crate::SyntaxKind;
+    type Kind = crate::lexer::SyntaxKind;
 
     fn kind_from_raw(raw: rowan::SyntaxKind) -> Self::Kind {
         Self::Kind::try_from(raw.0).unwrap()
