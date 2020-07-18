@@ -49,10 +49,18 @@ impl<'a> Parser<'a> {
         self.builder.token(kind.into(), text);
     }
 
+    fn skip_ws(&mut self) {
+        while self.peek() == Some(SyntaxKind::Whitespace) {
+            self.bump();
+        }
+    }
+
     fn parse(mut self) -> Parse {
         self.builder.start_node(SyntaxKind::Root.into());
 
+        self.skip_ws();
         self.expr_bp(0);
+        self.skip_ws();
 
         self.builder.finish_node();
 
@@ -69,6 +77,7 @@ impl<'a> Parser<'a> {
             Some(SyntaxKind::Number) => self.bump(),
             tok => panic!("bad token: {:?}", tok),
         }
+        self.skip_ws();
 
         loop {
             let op = match self.peek() {
@@ -92,8 +101,9 @@ impl<'a> Parser<'a> {
             self.builder
                 .start_node_at(checkpoint, SyntaxKind::Operation.into());
 
-            // Eat the operator’s token.
+            // Eat the operator’s token and any whitespace following it.
             self.bump();
+            self.skip_ws();
 
             self.expr_bp(right_bp);
 
@@ -172,6 +182,38 @@ mod tests {
       Number@3..4 "7"
     Sub@4..5 "-"
     Number@5..6 "3"
+"#,
+        );
+    }
+
+    #[test]
+    fn whitespace_is_skipped() {
+        let parse = Parser::new(" 14 +26- 27 /  3 * 2 ").parse();
+
+        assert_eq!(
+            parse.format(),
+            r#"Root@0..21
+  Whitespace@0..1 " "
+  Operation@1..21
+    Operation@1..7
+      Number@1..3 "14"
+      Whitespace@3..4 " "
+      Add@4..5 "+"
+      Number@5..7 "26"
+    Sub@7..8 "-"
+    Whitespace@8..9 " "
+    Operation@9..21
+      Operation@9..17
+        Number@9..11 "27"
+        Whitespace@11..12 " "
+        Div@12..13 "/"
+        Whitespace@13..15 "  "
+        Number@15..16 "3"
+        Whitespace@16..17 " "
+      Mul@17..18 "*"
+      Whitespace@18..19 " "
+      Number@19..20 "2"
+      Whitespace@20..21 " "
 "#,
         );
     }
