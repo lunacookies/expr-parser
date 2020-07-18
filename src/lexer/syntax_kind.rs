@@ -1,7 +1,7 @@
 use logos::Logos;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 
-#[derive(Logos, Debug, PartialEq, IntoPrimitive, TryFromPrimitive)]
+#[derive(Logos, Debug, Copy, Clone, PartialEq, IntoPrimitive, TryFromPrimitive)]
 #[repr(u16)]
 pub(crate) enum SyntaxKind {
     #[regex(" +")]
