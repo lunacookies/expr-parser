@@ -42,6 +42,11 @@ impl<'a> Parser<'a> {
         self.builder.token(kind.into(), text);
     }
 
+    fn eat(&mut self, kind: SyntaxKind) {
+        let (_, text) = self.lexer.next().unwrap();
+        self.builder.token(kind.into(), text);
+    }
+
     fn skip_ws(&mut self) {
         while self.peek() == Some(SyntaxKind::Whitespace) {
             self.bump();
@@ -66,20 +71,37 @@ impl<'a> Parser<'a> {
     fn expr_bp(&mut self, min_bp: u8) {
         let checkpoint = self.builder.checkpoint();
 
-        match self.peek() {
-            Some(SyntaxKind::Number) => self.bump(),
-            tok => panic!("bad token: {:?}", tok),
+        loop {
+            match self.peek() {
+                Some(SyntaxKind::Number) => {
+                    self.bump();
+                    break;
+                }
+                Some(_) => self.eat(SyntaxKind::Error),
+                None => return,
+            }
         }
+
         self.skip_ws();
 
         loop {
-            let op = match self.peek() {
-                None => break,
-                Some(SyntaxKind::Add) => Op::Add,
-                Some(SyntaxKind::Mul) => Op::Mul,
-                Some(SyntaxKind::Div) => Op::Div,
-                Some(SyntaxKind::Sub) => Op::Sub,
-                op => panic!("bad operator: {:?}", op),
+            let op = loop {
+                match self.peek() {
+                    Some(SyntaxKind::Add) => {
+                        break Op::Add;
+                    }
+                    Some(SyntaxKind::Mul) => {
+                        break Op::Mul;
+                    }
+                    Some(SyntaxKind::Div) => {
+                        break Op::Div;
+                    }
+                    Some(SyntaxKind::Sub) => {
+                        break Op::Sub;
+                    }
+                    Some(_) => self.eat(SyntaxKind::Error),
+                    None => return,
+                }
             };
 
             let (left_bp, right_bp) = infix_bp(op);
@@ -210,5 +232,38 @@ mod tests {
       Whitespace@20..21 " "
 "#,
         );
+    }
+
+    #[test]
+    fn junk_before_numbers_is_skipped() {
+        let parse = Parser::new("abc1").parse();
+
+        assert_eq!(
+            parse.format(),
+            r#"Root@0..4
+  Error@0..1 "a"
+  Error@1..2 "b"
+  Error@2..3 "c"
+  Number@3..4 "1"
+"#,
+        );
+    }
+
+    #[test]
+    fn junk_before_operators_is_skipped() {
+        let parse = Parser::new("1 a+ 2").parse();
+
+        assert_eq!(
+            parse.format(),
+            r#"Root@0..6
+  Operation@0..6
+    Number@0..1 "1"
+    Whitespace@1..2 " "
+    Error@2..3 "a"
+    Add@3..4 "+"
+    Whitespace@4..5 " "
+    Number@5..6 "2"
+"#,
+        )
     }
 }
