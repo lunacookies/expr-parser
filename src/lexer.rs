@@ -4,12 +4,12 @@ pub(crate) use syntax_kind::SyntaxKind;
 use logos::Logos;
 use smol_str::SmolStr;
 
-struct Lexer<'a> {
+pub(crate) struct Lexer<'a> {
     lexer: logos::Lexer<'a, SyntaxKind>,
 }
 
 impl<'a> Lexer<'a> {
-    fn new(s: &'a str) -> Self {
+    pub(crate) fn new(s: &'a str) -> Self {
         Self {
             lexer: SyntaxKind::lexer(s),
         }
