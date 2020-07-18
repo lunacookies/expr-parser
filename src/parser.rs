@@ -83,16 +83,20 @@ impl<'a> Parser<'a> {
                 op => panic!("bad operator: {:?}", op),
             };
 
-            self.builder
-                .start_node_at(checkpoint, SyntaxKind::Operation.into());
-
-            self.bump();
-
             let (left_bp, right_bp) = infix_bp(op);
 
             if left_bp < min_bp {
                 break;
             }
+
+            // Only continue building the syntax tree after potentially breaking out of the loop to
+            // prevent a half-built syntax tree.
+
+            self.builder
+                .start_node_at(checkpoint, SyntaxKind::Operation.into());
+
+            // Eat the operator’s token.
+            self.bump();
 
             self.expr_bp(right_bp);
 
