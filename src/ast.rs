@@ -1,10 +1,11 @@
 use crate::lexer::SyntaxKind;
-use crate::{Op, SyntaxNode};
+use crate::{Op, SyntaxElement, SyntaxNode, SyntaxToken};
 use rowan::SmolStr;
 
 macro_rules! ast_node {
     ($name:ident, $($syntax_kind:expr),+) => {
         #[allow(unused)]
+        #[derive(Debug)]
         pub(crate) struct $name(SyntaxNode);
 
         impl $name {
@@ -28,16 +29,41 @@ macro_rules! ast_node {
     };
 }
 
+macro_rules! ast_token {
+    ($name:ident, $($syntax_kind:expr),+) => {
+        #[allow(unused)]
+        #[derive(Debug)]
+        pub(crate) struct $name(SyntaxToken);
+
+        impl $name {
+            #[allow(unused)]
+            pub(crate) fn cast(node: SyntaxToken) -> Option<Self> {
+                if $(node.kind() == $syntax_kind)||+ {
+                    Some(Self(node))
+                } else {
+                    None
+                }
+            }
+
+            #[allow(unused)]
+            fn text(&self) -> &SmolStr {
+                self.0.text()
+            }
+        }
+    };
+}
+
 ast_node!(Root, SyntaxKind::Root);
-ast_node!(Number, SyntaxKind::Number);
-ast_node!(
+ast_node!(Operation, SyntaxKind::Operation);
+
+ast_token!(Number, SyntaxKind::Number);
+ast_token!(
     Operator,
     SyntaxKind::Add,
     SyntaxKind::Mul,
     SyntaxKind::Div,
     SyntaxKind::Sub
 );
-ast_node!(Operation, SyntaxKind::Operation);
 
 impl Number {
     fn eval(&self) -> u32 {
@@ -59,13 +85,17 @@ impl From<Operator> for Op {
 
 impl Operation {
     fn eval(&self) -> Option<u32> {
-        let children = self.0.children();
+        let children = self.0.children_with_tokens();
 
         let mut exprs = children.clone().filter_map(Expr::cast);
         let lhs = exprs.next()?.eval()?;
         let rhs = exprs.next()?.eval()?;
 
-        let op: Op = children.filter_map(Operator::cast).next()?.into();
+        let op: Op = children
+            .filter_map(|element| element.into_token())
+            .filter_map(Operator::cast)
+            .next()?
+            .into();
 
         let op = match op {
             Op::Add => std::ops::Add::add,
@@ -78,22 +108,54 @@ impl Operation {
     }
 }
 
-enum Expr {
+#[derive(Debug)]
+struct Expr(SyntaxElement);
+
+#[derive(Debug)]
+enum ExprKind {
     Number(Number),
     Operation(Operation),
 }
 
 impl Expr {
-    fn cast(node: SyntaxNode) -> Option<Self> {
-        Number::cast(node.clone())
-            .map(Self::Number)
-            .or_else(|| Operation::cast(node.clone()).map(Self::Operation))
+    fn cast(element: SyntaxElement) -> Option<Self> {
+        if element
+            .clone()
+            .into_token()
+            .and_then(Number::cast)
+            .is_some()
+            || element
+                .clone()
+                .into_node()
+                .and_then(Operation::cast)
+                .is_some()
+        {
+            Some(Self(element))
+        } else {
+            None
+        }
+    }
+
+    fn kind(&self) -> ExprKind {
+        self.0
+            .clone()
+            .into_token()
+            .and_then(Number::cast)
+            .map(ExprKind::Number)
+            .or_else(|| {
+                self.0
+                    .clone()
+                    .into_node()
+                    .and_then(Operation::cast)
+                    .map(ExprKind::Operation)
+            })
+            .unwrap()
     }
 
     fn eval(&self) -> Option<u32> {
-        match self {
-            Self::Number(n) => Some(n.eval()),
-            Self::Operation(o) => o.eval(),
+        match self.kind() {
+            ExprKind::Number(n) => Some(n.eval()),
+            ExprKind::Operation(o) => o.eval(),
         }
     }
 }
@@ -101,7 +163,7 @@ impl Expr {
 impl Root {
     pub(crate) fn eval(&self) -> Option<u32> {
         // Roots are expected to include only one child, with that child being an Expr.
-        let expr = Expr::cast(self.0.children().next()?)?;
+        let expr = Expr::cast(self.0.children_with_tokens().next()?)?;
         expr.eval()
     }
 }
