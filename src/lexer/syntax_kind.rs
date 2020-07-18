@@ -43,51 +43,40 @@ mod tests {
         assert_eq!(SyntaxKind::lexer("").next(), None);
     }
 
+    fn test(input: &str, expected_kind: SyntaxKind) {
+        let mut lexer = SyntaxKind::lexer(input);
+
+        assert_eq!(lexer.next(), Some(expected_kind));
+        assert_eq!(lexer.slice(), input);
+    }
+
     #[test]
     fn lexes_spaces() {
-        let mut lexer = SyntaxKind::lexer("    ");
-
-        assert_eq!(lexer.next(), Some(SyntaxKind::Whitespace));
-        assert_eq!(lexer.slice(), "    ");
+        test("    ", SyntaxKind::Whitespace);
     }
 
     #[test]
     fn lexes_numbers() {
-        let mut lexer = SyntaxKind::lexer("1234567890");
-
-        assert_eq!(lexer.next(), Some(SyntaxKind::Number));
-        assert_eq!(lexer.slice(), "1234567890");
+        test("1234567890", SyntaxKind::Number);
     }
 
     #[test]
     fn lexes_addition() {
-        let mut lexer = SyntaxKind::lexer("+");
-
-        assert_eq!(lexer.next(), Some(SyntaxKind::Add));
-        assert_eq!(lexer.slice(), "+");
+        test("+", SyntaxKind::Add);
     }
 
     #[test]
     fn lexes_subtraction() {
-        let mut lexer = SyntaxKind::lexer("-");
-
-        assert_eq!(lexer.next(), Some(SyntaxKind::Sub));
-        assert_eq!(lexer.slice(), "-");
+        test("-", SyntaxKind::Sub);
     }
 
     #[test]
     fn lexes_multiplication() {
-        let mut lexer = SyntaxKind::lexer("*");
-
-        assert_eq!(lexer.next(), Some(SyntaxKind::Mul));
-        assert_eq!(lexer.slice(), "*");
+        test("*", SyntaxKind::Mul);
     }
 
     #[test]
     fn lexes_division() {
-        let mut lexer = SyntaxKind::lexer("/");
-
-        assert_eq!(lexer.next(), Some(SyntaxKind::Div));
-        assert_eq!(lexer.slice(), "/");
+        test("/", SyntaxKind::Div);
     }
 }
