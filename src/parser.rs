@@ -1,3 +1,4 @@
+use crate::ast::Root;
 use crate::lexer::{Lexer, SyntaxKind};
 use crate::{Op, SyntaxNode};
 use rowan::{GreenNode, GreenNodeBuilder};
@@ -11,6 +12,15 @@ pub struct Parse {
 impl Parse {
     fn syntax(&self) -> SyntaxNode {
         SyntaxNode::new_root(self.green_node.clone())
+    }
+
+    pub fn eval(&self) -> Option<u32> {
+        // Parse will always contain a Root node, so we can unwrap.
+        Root::cast(self.syntax()).unwrap().eval()
+    }
+
+    pub fn errors(&self) -> &[String] {
+        &self.errors
     }
 
     pub fn format(&self) -> String {

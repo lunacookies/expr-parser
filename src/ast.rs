@@ -4,11 +4,12 @@ use rowan::SmolStr;
 
 macro_rules! ast_node {
     ($name:ident, $($syntax_kind:expr),+) => {
-        struct $name(SyntaxNode);
+        #[allow(unused)]
+        pub(crate) struct $name(SyntaxNode);
 
         impl $name {
             #[allow(unused)]
-            fn cast(node: SyntaxNode) -> Option<Self> {
+            pub(crate) fn cast(node: SyntaxNode) -> Option<Self> {
                 if $(node.kind() == $syntax_kind)||+ {
                     Some(Self(node))
                 } else {
@@ -98,7 +99,7 @@ impl Expr {
 }
 
 impl Root {
-    fn eval(&self) -> Option<u32> {
+    pub(crate) fn eval(&self) -> Option<u32> {
         // Roots are expected to include only one child, with that child being an Expr.
         let expr = Expr::cast(self.0.children().next()?)?;
         expr.eval()
