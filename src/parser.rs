@@ -92,7 +92,10 @@ impl<'a> Parser<'a> {
                     self.errors
                         .push(format!("found {}, expected {}", kind, SyntaxKind::Number));
                 }
-                None => self.errors.push(format!("expected {}", SyntaxKind::Number)),
+                None => {
+                    self.errors.push(format!("expected {}", SyntaxKind::Number));
+                    return;
+                }
             }
         }
 
