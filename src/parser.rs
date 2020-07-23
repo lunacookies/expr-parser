@@ -5,7 +5,7 @@ use crate::{Op, SyntaxNode};
 use codespan_reporting::diagnostic::Diagnostic;
 use rowan::{GreenNode, GreenNodeBuilder};
 use std::iter::Peekable;
-use std::ops::Range;
+use text_size::TextRange;
 
 pub struct Parse {
     green_node: GreenNode,
@@ -46,7 +46,7 @@ pub struct Parser<'a> {
     lexer: Peekable<Lexer<'a>>,
     builder: GreenNodeBuilder<'static>,
     errors: Vec<SyntaxError>,
-    last_lexeme_range: Range<usize>,
+    last_lexeme_range: TextRange,
 }
 
 impl<'a> Parser<'a> {
@@ -55,9 +55,7 @@ impl<'a> Parser<'a> {
             lexer: Lexer::new(s).peekable(),
             builder: GreenNodeBuilder::new(),
             errors: Vec::new(),
-
-            // This will break if an error is reported when provided with an empty input.
-            last_lexeme_range: 0..1,
+            last_lexeme_range: TextRange::default(),
         }
     }
 
@@ -75,11 +73,11 @@ impl<'a> Parser<'a> {
     fn record_error(&mut self, kind: SyntaxErrorKind) {
         let range = if let Some(lexeme) = self.lexer.next() {
             self.builder.token(SyntaxKind::Error.into(), lexeme.text);
-            self.last_lexeme_range = lexeme.range.clone();
+            self.last_lexeme_range = lexeme.range;
 
             lexeme.range
         } else {
-            self.last_lexeme_range.clone()
+            self.last_lexeme_range
         };
 
         self.errors.push(SyntaxError { kind, range });

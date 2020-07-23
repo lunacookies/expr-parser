@@ -3,13 +3,15 @@ pub(crate) use syntax_kind::SyntaxKind;
 
 use logos::Logos;
 use smol_str::SmolStr;
+use std::convert::TryFrom;
 use std::ops::Range;
+use text_size::{TextRange, TextSize};
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct Lexeme {
     pub(crate) kind: SyntaxKind,
     pub(crate) text: SmolStr,
-    pub(crate) range: Range<usize>,
+    pub(crate) range: TextRange,
 }
 
 pub(crate) struct Lexer<'a> {
@@ -30,7 +32,12 @@ impl Iterator for Lexer<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         let kind = self.lexer.next()?;
         let text = SmolStr::from(self.lexer.slice());
-        let range = self.lexer.span();
+
+        let Range { start, end } = self.lexer.span();
+        let start = TextSize::try_from(start).unwrap();
+        let end = TextSize::try_from(end).unwrap();
+
+        let range = TextRange::new(start, end);
 
         Some(Lexeme { kind, text, range })
     }
@@ -39,6 +46,10 @@ impl Iterator for Lexer<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn range(start: u32, end: u32) -> TextRange {
+        TextRange::new(TextSize::from(start), TextSize::from(end))
+    }
 
     #[test]
     fn lexer_yields_lexemes() {
@@ -49,7 +60,7 @@ mod tests {
             Some(Lexeme {
                 kind: SyntaxKind::Number,
                 text: SmolStr::from("1"),
-                range: 0..1,
+                range: range(0, 1),
             }),
         );
 
@@ -58,7 +69,7 @@ mod tests {
             Some(Lexeme {
                 kind: SyntaxKind::Whitespace,
                 text: SmolStr::from(" "),
-                range: 1..2,
+                range: range(1, 2),
             }),
         );
 
@@ -67,7 +78,7 @@ mod tests {
             Some(Lexeme {
                 kind: SyntaxKind::Plus,
                 text: SmolStr::from("+"),
-                range: 2..3,
+                range: range(2, 3),
             }),
         );
 
@@ -76,7 +87,7 @@ mod tests {
             Some(Lexeme {
                 kind: SyntaxKind::Whitespace,
                 text: SmolStr::from(" "),
-                range: 3..4,
+                range: range(3, 4),
             }),
         );
 
@@ -85,7 +96,7 @@ mod tests {
             Some(Lexeme {
                 kind: SyntaxKind::Number,
                 text: SmolStr::from("2"),
-                range: 4..5,
+                range: range(4, 5),
             })
         );
 
