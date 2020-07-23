@@ -67,6 +67,24 @@ ast_token!(
     SyntaxKind::Minus
 );
 
+impl Operation {
+    fn lhs(&self) -> Option<Expr> {
+        self.0.children_with_tokens().filter_map(Expr::cast).next()
+    }
+
+    fn op(&self) -> Option<Operator> {
+        self.0
+            .children_with_tokens()
+            .filter_map(|element| element.into_token())
+            .filter_map(Operator::cast)
+            .next()
+    }
+
+    fn rhs(&self) -> Option<Expr> {
+        self.0.children_with_tokens().filter_map(Expr::cast).nth(1)
+    }
+}
+
 impl From<Operator> for Op {
     fn from(op: Operator) -> Self {
         match op.text().as_str() {

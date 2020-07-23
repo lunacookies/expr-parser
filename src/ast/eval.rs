@@ -1,4 +1,4 @@
-use super::{Expr, Number, Operation, Operator, Root};
+use super::{Expr, Number, Operation, Root};
 use crate::Op;
 
 impl Number {
@@ -9,19 +9,10 @@ impl Number {
 
 impl Operation {
     fn eval(&self) -> Option<u32> {
-        let children = self.0.children_with_tokens();
+        let lhs = self.lhs()?.eval()?;
+        let rhs = self.rhs()?.eval()?;
 
-        let mut exprs = children.clone().filter_map(Expr::cast);
-        let lhs = exprs.next()?.eval()?;
-        let rhs = exprs.next()?.eval()?;
-
-        let op: Op = children
-            .filter_map(|element| element.into_token())
-            .filter_map(Operator::cast)
-            .next()?
-            .into();
-
-        let op = match op {
+        let op = match self.op()?.into() {
             Op::Add => std::ops::Add::add,
             Op::Sub => std::ops::Sub::sub,
             Op::Mul => std::ops::Mul::mul,
