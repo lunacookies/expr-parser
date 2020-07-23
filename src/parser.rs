@@ -2,6 +2,7 @@ use crate::ast::Root;
 use crate::errors::{SyntaxError, SyntaxErrorKind};
 use crate::lexer::{Lexer, SyntaxKind};
 use crate::{Op, SyntaxNode};
+use codespan_reporting::diagnostic::Diagnostic;
 use rowan::{GreenNode, GreenNodeBuilder};
 use std::iter::Peekable;
 use std::ops::Range;
@@ -25,6 +26,15 @@ impl Parse {
         self.errors
             .iter()
             .map(|syntax_error| syntax_error.kind.to_string())
+    }
+
+    pub fn diagnostics<'a, FileId: Clone + 'a>(
+        &'a self,
+        file_id: FileId,
+    ) -> impl ExactSizeIterator<Item = Diagnostic<FileId>> + 'a {
+        self.errors
+            .iter()
+            .map(move |syntax_error| syntax_error.as_diagnostic(file_id.clone()))
     }
 
     pub fn format(&self) -> String {

@@ -1,10 +1,19 @@
 use crate::lexer::SyntaxKind;
+use codespan_reporting::diagnostic::{Diagnostic, Label};
 use std::fmt;
 use std::ops::Range;
 
 pub(crate) struct SyntaxError {
     pub(crate) kind: SyntaxErrorKind,
     pub(crate) range: Range<usize>,
+}
+
+impl SyntaxError {
+    pub(crate) fn as_diagnostic<FileId>(&self, file_id: FileId) -> Diagnostic<FileId> {
+        Diagnostic::error().with_labels(vec![
+            Label::primary(file_id, self.range.clone()).with_message(self.kind.to_string())
+        ])
+    }
 }
 
 pub(crate) enum SyntaxErrorKind {
