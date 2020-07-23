@@ -15,4 +15,4 @@ enum Op {
     Sub,
 }
 
-pub use parser::Parser;
+pub use parser::{Parse, Parser};
