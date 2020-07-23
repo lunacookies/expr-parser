@@ -1,4 +1,5 @@
 mod ast;
+mod errors;
 mod lang;
 mod lexer;
 mod parser;

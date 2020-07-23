@@ -1,12 +1,12 @@
 use crate::ast::Root;
 use crate::lexer::{Lexer, SyntaxKind};
-use crate::{Op, SyntaxNode};
+use crate::{errors::SyntaxError, Op, SyntaxNode};
 use rowan::{GreenNode, GreenNodeBuilder};
 use std::iter::Peekable;
 
 pub struct Parse {
     green_node: GreenNode,
-    errors: Vec<String>,
+    errors: Vec<SyntaxError>,
 }
 
 impl Parse {
@@ -19,8 +19,8 @@ impl Parse {
         Root::cast(self.syntax()).unwrap().eval()
     }
 
-    pub fn errors(&self) -> &[String] {
-        &self.errors
+    pub fn errors(&self) -> impl ExactSizeIterator<Item = String> + '_ {
+        self.errors.iter().map(ToString::to_string)
     }
 
     pub fn format(&self) -> String {
@@ -31,7 +31,7 @@ impl Parse {
 pub struct Parser<'a> {
     lexer: Peekable<Lexer<'a>>,
     builder: GreenNodeBuilder<'static>,
-    errors: Vec<String>,
+    errors: Vec<SyntaxError>,
 }
 
 impl<'a> Parser<'a> {
@@ -89,11 +89,15 @@ impl<'a> Parser<'a> {
                 }
                 Some(kind) => {
                     self.eat(SyntaxKind::Error);
-                    self.errors
-                        .push(format!("found {}, expected {}", kind, SyntaxKind::Number));
+                    self.errors.push(SyntaxError::FoundExpected {
+                        found: kind,
+                        expected: &[SyntaxKind::Number],
+                    });
                 }
                 None => {
-                    self.errors.push(format!("expected {}", SyntaxKind::Number));
+                    self.errors.push(SyntaxError::Expected {
+                        expected: &[SyntaxKind::Number],
+                    });
                     return;
                 }
             }
@@ -118,8 +122,15 @@ impl<'a> Parser<'a> {
                     }
                     Some(kind) => {
                         self.eat(SyntaxKind::Error);
-                        self.errors
-                            .push(format!("found {}, expected an operator", kind));
+                        self.errors.push(SyntaxError::FoundExpected {
+                            found: kind,
+                            expected: &[
+                                SyntaxKind::Plus,
+                                SyntaxKind::Star,
+                                SyntaxKind::Slash,
+                                SyntaxKind::Minus,
+                            ],
+                        });
                     }
                     None => return,
                 }
