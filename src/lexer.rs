@@ -3,11 +3,13 @@ pub(crate) use syntax_kind::SyntaxKind;
 
 use logos::Logos;
 use smol_str::SmolStr;
+use std::ops::Range;
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct Lexeme {
     pub(crate) kind: SyntaxKind,
     pub(crate) text: SmolStr,
+    pub(crate) range: Range<usize>,
 }
 
 pub(crate) struct Lexer<'a> {
@@ -28,8 +30,9 @@ impl Iterator for Lexer<'_> {
     fn next(&mut self) -> Option<Self::Item> {
         let kind = self.lexer.next()?;
         let text = SmolStr::from(self.lexer.slice());
+        let range = self.lexer.span();
 
-        Some(Lexeme { kind, text })
+        Some(Lexeme { kind, text, range })
     }
 }
 
@@ -38,7 +41,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn lexer_yields_smol_strs_and_syntax_kinds() {
+    fn lexer_yields_lexemes() {
         let mut lexer = Lexer::new("1 + 2");
 
         assert_eq!(
@@ -46,6 +49,7 @@ mod tests {
             Some(Lexeme {
                 kind: SyntaxKind::Number,
                 text: SmolStr::from("1"),
+                range: 0..1,
             }),
         );
 
@@ -54,6 +58,7 @@ mod tests {
             Some(Lexeme {
                 kind: SyntaxKind::Whitespace,
                 text: SmolStr::from(" "),
+                range: 1..2,
             }),
         );
 
@@ -62,6 +67,7 @@ mod tests {
             Some(Lexeme {
                 kind: SyntaxKind::Plus,
                 text: SmolStr::from("+"),
+                range: 2..3,
             }),
         );
 
@@ -70,6 +76,7 @@ mod tests {
             Some(Lexeme {
                 kind: SyntaxKind::Whitespace,
                 text: SmolStr::from(" "),
+                range: 3..4,
             }),
         );
 
@@ -78,6 +85,7 @@ mod tests {
             Some(Lexeme {
                 kind: SyntaxKind::Number,
                 text: SmolStr::from("2"),
+                range: 4..5,
             })
         );
 
