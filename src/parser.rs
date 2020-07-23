@@ -44,17 +44,17 @@ impl<'a> Parser<'a> {
     }
 
     fn peek(&mut self) -> Option<SyntaxKind> {
-        self.lexer.peek().map(|(kind, _)| *kind)
+        self.lexer.peek().map(|lexeme| lexeme.kind)
     }
 
     fn bump(&mut self) {
-        let (kind, text) = self.lexer.next().unwrap();
-        self.builder.token(kind.into(), text);
+        let lexeme = self.lexer.next().unwrap();
+        self.builder.token(lexeme.kind.into(), lexeme.text);
     }
 
     fn eat(&mut self, kind: SyntaxKind) {
-        let (_, text) = self.lexer.next().unwrap();
-        self.builder.token(kind.into(), text);
+        let lexeme = self.lexer.next().unwrap();
+        self.builder.token(kind.into(), lexeme.text);
     }
 
     fn skip_ws(&mut self) {
