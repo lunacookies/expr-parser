@@ -1,7 +1,13 @@
 use crate::lexer::SyntaxKind;
 use std::fmt;
+use std::ops::Range;
 
-pub(crate) enum SyntaxError {
+pub(crate) struct SyntaxError {
+    pub(crate) kind: SyntaxErrorKind,
+    pub(crate) range: Range<usize>,
+}
+
+pub(crate) enum SyntaxErrorKind {
     FoundExpected {
         found: SyntaxKind,
         expected: &'static [SyntaxKind],
@@ -11,7 +17,7 @@ pub(crate) enum SyntaxError {
     },
 }
 
-impl fmt::Display for SyntaxError {
+impl fmt::Display for SyntaxErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let expected_kinds = match self {
             Self::FoundExpected { found, expected } => {
@@ -48,7 +54,7 @@ mod tests {
     #[test]
     fn expected_with_one_kind_has_no_separators() {
         assert_eq!(
-            SyntaxError::Expected {
+            SyntaxErrorKind::Expected {
                 expected: &[SyntaxKind::Number],
             }
             .to_string(),
@@ -59,7 +65,7 @@ mod tests {
     #[test]
     fn expected_with_two_kinds_separates_with_or() {
         assert_eq!(
-            SyntaxError::Expected {
+            SyntaxErrorKind::Expected {
                 expected: &[SyntaxKind::Plus, SyntaxKind::Minus],
             }
             .to_string(),
@@ -70,7 +76,7 @@ mod tests {
     #[test]
     fn expected_with_four_kinds_separates_with_comma_then_or() {
         assert_eq!(
-            SyntaxError::Expected {
+            SyntaxErrorKind::Expected {
                 expected: &[
                     SyntaxKind::Plus,
                     SyntaxKind::Star,
@@ -86,7 +92,7 @@ mod tests {
     #[test]
     fn found_expected_with_one_kind_has_no_separators() {
         assert_eq!(
-            SyntaxError::FoundExpected {
+            SyntaxErrorKind::FoundExpected {
                 found: SyntaxKind::Plus,
                 expected: &[SyntaxKind::Number],
             }
@@ -98,7 +104,7 @@ mod tests {
     #[test]
     fn found_expected_with_two_kinds_separates_with_or() {
         assert_eq!(
-            SyntaxError::FoundExpected {
+            SyntaxErrorKind::FoundExpected {
                 found: SyntaxKind::Minus,
                 expected: &[SyntaxKind::Number, SyntaxKind::Star],
             }
@@ -110,7 +116,7 @@ mod tests {
     #[test]
     fn found_expected_with_three_kinds_separates_with_comma_then_or() {
         assert_eq!(
-            SyntaxError::FoundExpected {
+            SyntaxErrorKind::FoundExpected {
                 found: SyntaxKind::Slash,
                 expected: &[SyntaxKind::Plus, SyntaxKind::Minus, SyntaxKind::Star],
             }

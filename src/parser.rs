@@ -1,8 +1,10 @@
 use crate::ast::Root;
+use crate::errors::{SyntaxError, SyntaxErrorKind};
 use crate::lexer::{Lexer, SyntaxKind};
-use crate::{errors::SyntaxError, Op, SyntaxNode};
+use crate::{Op, SyntaxNode};
 use rowan::{GreenNode, GreenNodeBuilder};
 use std::iter::Peekable;
+use std::ops::Range;
 
 pub struct Parse {
     green_node: GreenNode,
@@ -20,7 +22,9 @@ impl Parse {
     }
 
     pub fn errors(&self) -> impl ExactSizeIterator<Item = String> + '_ {
-        self.errors.iter().map(ToString::to_string)
+        self.errors
+            .iter()
+            .map(|syntax_error| syntax_error.kind.to_string())
     }
 
     pub fn format(&self) -> String {
@@ -32,6 +36,7 @@ pub struct Parser<'a> {
     lexer: Peekable<Lexer<'a>>,
     builder: GreenNodeBuilder<'static>,
     errors: Vec<SyntaxError>,
+    last_lexeme_range: Range<usize>,
 }
 
 impl<'a> Parser<'a> {
@@ -40,6 +45,9 @@ impl<'a> Parser<'a> {
             lexer: Lexer::new(s).peekable(),
             builder: GreenNodeBuilder::new(),
             errors: Vec::new(),
+
+            // This will break if an error is reported when provided with an empty input.
+            last_lexeme_range: 0..1,
         }
     }
 
@@ -49,12 +57,22 @@ impl<'a> Parser<'a> {
 
     fn bump(&mut self) {
         let lexeme = self.lexer.next().unwrap();
+
         self.builder.token(lexeme.kind.into(), lexeme.text);
+        self.last_lexeme_range = lexeme.range;
     }
 
-    fn eat(&mut self, kind: SyntaxKind) {
-        let lexeme = self.lexer.next().unwrap();
-        self.builder.token(kind.into(), lexeme.text);
+    fn record_error(&mut self, kind: SyntaxErrorKind) {
+        let range = if let Some(lexeme) = self.lexer.next() {
+            self.builder.token(SyntaxKind::Error.into(), lexeme.text);
+            self.last_lexeme_range = lexeme.range.clone();
+
+            lexeme.range
+        } else {
+            self.last_lexeme_range.clone()
+        };
+
+        self.errors.push(SyntaxError { kind, range });
     }
 
     fn skip_ws(&mut self) {
@@ -88,14 +106,13 @@ impl<'a> Parser<'a> {
                     break;
                 }
                 Some(kind) => {
-                    self.eat(SyntaxKind::Error);
-                    self.errors.push(SyntaxError::FoundExpected {
+                    self.record_error(SyntaxErrorKind::FoundExpected {
                         found: kind,
                         expected: &[SyntaxKind::Number],
                     });
                 }
                 None => {
-                    self.errors.push(SyntaxError::Expected {
+                    self.record_error(SyntaxErrorKind::Expected {
                         expected: &[SyntaxKind::Number],
                     });
                     return;
@@ -121,8 +138,7 @@ impl<'a> Parser<'a> {
                         break Op::Sub;
                     }
                     Some(kind) => {
-                        self.eat(SyntaxKind::Error);
-                        self.errors.push(SyntaxError::FoundExpected {
+                        self.record_error(SyntaxErrorKind::FoundExpected {
                             found: kind,
                             expected: &[
                                 SyntaxKind::Plus,
